@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Protobuf.js by dcodeIO</title>
+    <title>ProtoBuf.js by dcodeIO</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
@@ -15,7 +15,7 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1>Protobuf.js</h1>
+        <h1>ProtoBuf.js</h1>
         <p>A protobuf implementation including a .proto parser, reflection, message class building and simple encoding and decoding in plain JavaScript.</p>
 
         <p class="view"><a href="https://github.com/dcodeIO/ProtoBuf.js">View the Project on GitHub <small>dcodeIO/ProtoBuf.js</small></a></p>
@@ -28,448 +28,77 @@
         </ul>
       </header>
       <section>
-        <h1><img src="https://raw.github.com/dcodeIO/ProtoBuf.js/master/ProtoBuf.png" alt="ProtoBuf.js - protobuf for JavaScript"></h1>
+        <h1>
+<a name="" class="anchor" href="#"><span class="octicon octicon-link"></span></a><img src="https://raw.github.com/dcodeIO/ProtoBuf.js/master/ProtoBuf.png" alt="ProtoBuf.js - protobuf for JavaScript">
+</h1>
 
-<p>A protobuf implementation on top of <a href="https://github.com/dcodeIO/ByteBuffer.js">ByteBuffer.js</a> including a .proto parser,
-reflection, message class building and simple encoding and decoding in plain JavaScript. No compilation step required,
-works out of the box on .proto files. It's also used for the cross-platform multiplayer component in
-<a href="http://www.esoccer.me">eSoccer</a>, an HTML5 game developed at <a href="http://www.h-brs.de">University of Applied Sciences Bonn</a>.</p>
+<p><strong>Protocol Buffers</strong> are a language-neutral, platform-neutral, extensible way of serializing structured data for use
+in communications protocols, data storage, and more, originally designed at Google (<a href="https://developers.google.com/protocol-buffers/docs/overview">see</a>).</p>
 
-<h2>Features</h2>
+<p><strong>ProtoBuf.js</strong> is a pure JavaScript implementation on top of <a href="https://github.com/dcodeIO/ByteBuffer.js">ByteBuffer.js</a>
+including a .proto parser, message class building and simple encoding and decoding. There is no compilation step
+required, it's super easy to use and it works out of the box on .proto files!</p>
+
+<h2>
+<a name="getting-started" class="anchor" href="#getting-started"><span class="octicon octicon-link"></span></a>Getting started</h2>
 
 <ul>
 <li>
-<a href="http://www.commonjs.org/">CommonJS</a> compatible</li>
+<strong>Step 1:</strong> Become familar with <a href="https://developers.google.com/protocol-buffers/docs/overview">Google's Protocol Buffers (protobuf)</a>
+</li>
+<li>
+<strong>Step 2:</strong> Head straight to <a href="https://github.com/dcodeIO/ProtoBuf.js/wiki">our wiki for up to date usage information and examples</a>
+</li>
+<li>
+<strong>Step 3:</strong> Build something cool! :-)</li>
+</ul><h2>
+<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
 <li>
 <a href="http://requirejs.org/">RequireJS</a>/AMD compatible</li>
-<li>Shim compatible (include the script, then use <code>var ProtoBuf = dcodeIO.ProtoBuf;</code>)</li>
 <li>
-<a href="http://nodejs.org">node.js</a> compatible, also available via <a href="https://npmjs.org/package/protobufjs">npm</a>
+<a href="http://nodejs.org">node.js</a>/CommonJS compatible, also available via <a href="https://npmjs.org/package/protobufjs">npm</a>
 </li>
+<li>Browser compatible</li>
 <li>
 <a href="https://developers.google.com/closure/compiler/">Closure Compiler</a> compatible (fully annotated, <a href="https://github.com/dcodeIO/ProtoBuf.js/tree/master/externs">externs</a>)</li>
 <li>Fully documented using <a href="https://github.com/jsdoc3/jsdoc">jsdoc3</a>
 </li>
-<li>Well tested through <a href="https://github.com/caolan/nodeunit">nodeunit</a>
+<li>Well tested through <a href="https://github.com/dcodeIO/test.js">test.js</a>
 </li>
 <li>
 <a href="https://github.com/dcodeIO/ByteBuffer.js">ByteBuffer.js</a> is the only production dependency</li>
+<li>Fully compatible to the official implementation including advanced features</li>
 <li>Small footprint (even smaller if you use a noparse build)</li>
-</ul><h2>Builder</h2>
-
-<p>Probably the core component of ProtoBuf.js. Resolves all type references, performs all the necessary checks and returns
-ready to use classes. Can be created from a .proto file or from a JSON definition. The later does not even require the
-.proto parser to be included (<a href="https://github.com/dcodeIO/ProtoBuf.js#using-json-without-the-proto-parser">see</a>).</p>
-
-<p>Install: <code>npm install protobufjs</code></p>
-
-<h4>Using .proto files</h4>
-
-<p>Example: <a href="https://github.com/dcodeIO/ProtoBuf.js/tree/master/tests/complex.proto">tests/complex.proto</a></p>
-
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">ProtoBuf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"protobufjs"</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">builder</span> <span class="o">=</span> <span class="nx">ProtoBuf</span><span class="p">.</span><span class="nx">protoFromFile</span><span class="p">(</span><span class="s2">"tests/complex.proto"</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">Game</span> <span class="o">=</span> <span class="nx">builder</span><span class="p">.</span><span class="nx">build</span><span class="p">(</span><span class="s2">"Game"</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">Car</span> <span class="o">=</span> <span class="nx">Game</span><span class="p">.</span><span class="nx">Cars</span><span class="p">.</span><span class="nx">Car</span><span class="p">;</span>
-
-<span class="c1">// Construct with arguments list in field order:</span>
-<span class="kd">var</span> <span class="nx">car</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Car</span><span class="p">(</span><span class="s2">"Rusty"</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Car</span><span class="p">.</span><span class="nx">Vendor</span><span class="p">(</span><span class="s2">"Iron Inc."</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Car</span><span class="p">.</span><span class="nx">Vendor</span><span class="p">.</span><span class="nx">Address</span><span class="p">(</span><span class="s2">"US"</span><span class="p">)),</span> <span class="nx">Car</span><span class="p">.</span><span class="nx">Speed</span><span class="p">.</span><span class="nx">SUPERFAST</span><span class="p">);</span>
-
-<span class="c1">// OR: Construct with values from an object, implicit message creation (address) and enum values as strings:</span>
-<span class="kd">var</span> <span class="nx">car</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Car</span><span class="p">({</span>
-    <span class="s2">"model"</span><span class="o">:</span> <span class="s2">"Rusty"</span><span class="p">,</span>
-    <span class="s2">"vendor"</span><span class="o">:</span> <span class="p">{</span>
-        <span class="s2">"name"</span><span class="o">:</span> <span class="s2">"Iron Inc."</span><span class="p">,</span>
-        <span class="s2">"address"</span><span class="o">:</span> <span class="p">{</span>
-            <span class="s2">"country"</span><span class="o">:</span> <span class="s2">"US"</span>
-        <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="s2">"speed"</span><span class="o">:</span> <span class="s2">"SUPERFAST"</span> <span class="c1">// also equivalent to "speed": 2</span>
-<span class="p">});</span>
-
-<span class="c1">// OR: It's also possible to mix all of this!</span>
-
-<span class="c1">// Afterwards, just encode your message:</span>
-<span class="kd">var</span> <span class="nx">buffer</span> <span class="o">=</span> <span class="nx">car</span><span class="p">.</span><span class="nx">encode</span><span class="p">();</span>
-
-<span class="c1">// And send it over the wire:</span>
-<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="p">...;</span>
-<span class="nx">socket</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">buffer</span><span class="p">.</span><span class="nx">toArrayBuffer</span><span class="p">());</span>
-
-<span class="c1">// OR: Short...</span>
-<span class="nx">socket</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">car</span><span class="p">.</span><span class="nx">toArrayBuffer</span><span class="p">());</span>
-</pre></div>
-
-<h4>Putting multiple .proto files into a common namespace</h4>
-
-<p>Example: <a href="https://github.com/dcodeIO/ProtoBuf.js/tree/master/tests/example1.proto">tests/example1.proto</a>,
-<a href="https://github.com/dcodeIO/ProtoBuf.js/tree/master/tests/example2.proto">tests/example2.proto</a></p>
-
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">builder</span> <span class="o">=</span> <span class="nx">ProtoBuf</span><span class="p">.</span><span class="nx">protoFromFile</span><span class="p">(</span><span class="s2">"tests/example1.proto"</span><span class="p">);</span>
-<span class="nx">ProtoBuf</span><span class="p">.</span><span class="nx">protoFromFile</span><span class="p">(</span><span class="s2">"tests/example2.proto"</span><span class="p">,</span> <span class="nx">builder</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">builder</span><span class="p">.</span><span class="nx">build</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">test1</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">root</span><span class="p">.</span><span class="nx">Test1</span><span class="p">(</span><span class="mi">123</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">test2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">root</span><span class="p">.</span><span class="nx">Test2</span><span class="p">(</span><span class="s2">"123"</span><span class="p">);</span>
-<span class="p">...</span>
-</pre></div>
-
-<h4>Using JSON without the .proto parser</h4>
-
-<p>Example: <a href="https://github.com/dcodeIO/ProtoBuf.js/tree/master/tests/complex.json">tests/complex.json</a></p>
-
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">ProtoBuf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"protobufjs"</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">builder</span> <span class="o">=</span> <span class="nx">ProtoBuf</span><span class="p">.</span><span class="nx">newBuilder</span><span class="p">();</span>    <span class="c1">// Alternatively:</span>
-<span class="nx">builder</span><span class="p">.</span><span class="nx">define</span><span class="p">(</span><span class="s2">"Game"</span><span class="p">);</span>                 <span class="c1">// var builder = ProtoBuf.newBuilder("Game");</span>
-<span class="nx">builder</span><span class="p">.</span><span class="nx">create</span><span class="p">([</span>
-      <span class="p">{</span>
-          <span class="s2">"name"</span><span class="o">:</span> <span class="s2">"Car"</span><span class="p">,</span>
-          <span class="s2">"fields"</span><span class="o">:</span> <span class="p">[</span>
-              <span class="p">{</span>
-                  <span class="s2">"rule"</span><span class="o">:</span> <span class="s2">"required"</span><span class="p">,</span>
-                  <span class="s2">"type"</span><span class="o">:</span> <span class="s2">"string"</span><span class="p">,</span>
-                  <span class="s2">"name"</span><span class="o">:</span> <span class="s2">"model"</span><span class="p">,</span>
-                  <span class="s2">"id"</span><span class="o">:</span> <span class="mi">1</span>
-              <span class="p">},</span>
-              <span class="p">...</span>
-          <span class="p">],</span>
-          <span class="s2">"messages"</span><span class="o">:</span> <span class="p">[</span>
-              <span class="p">{</span>
-                  <span class="s2">"name"</span><span class="o">:</span> <span class="s2">"Vendor"</span><span class="p">,</span>
-                  <span class="s2">"fields"</span><span class="o">:</span> <span class="p">...,</span>
-              <span class="p">},</span>
-              <span class="p">...</span>
-          <span class="p">],</span>
-          <span class="s2">"enums"</span><span class="o">:</span> <span class="p">[</span>
-              <span class="p">{</span>
-                  <span class="s2">"name"</span><span class="o">:</span> <span class="s2">"Speed"</span><span class="p">,</span>
-                  <span class="s2">"values"</span><span class="o">:</span> <span class="p">[</span>
-                      <span class="p">{</span>
-                          <span class="s2">"name"</span><span class="o">:</span> <span class="s2">"FAST"</span><span class="p">,</span>
-                          <span class="s2">"id"</span><span class="o">:</span> <span class="mi">1</span>
-                      <span class="p">},</span>
-                      <span class="p">...</span>
-                  <span class="p">]</span>
-              <span class="p">}</span>
-          <span class="p">]</span>
-      <span class="p">}</span>
-<span class="p">]);</span>
-
-<span class="kd">var</span> <span class="nx">Game</span> <span class="o">=</span> <span class="nx">builder</span><span class="p">.</span><span class="nx">build</span><span class="p">(</span><span class="s2">"Game"</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">Car</span> <span class="o">=</span> <span class="nx">Game</span><span class="p">.</span><span class="nx">Cars</span><span class="p">.</span><span class="nx">Car</span><span class="p">;</span>
-<span class="p">...</span> <span class="nx">actually</span> <span class="nx">the</span> <span class="nx">same</span> <span class="nx">as</span> <span class="nx">above</span> <span class="p">...</span>
-</pre></div>
-
-<p>When using JSON only, you can use <a href="https://github.com/dcodeIO/ProtoBuf.js/blob/master/ProtoBuf.noparse.js">ProtoBuf.noparse.js</a>
-/ <a href="https://github.com/dcodeIO/ProtoBuf.js/blob/master/ProtoBuf.noparse.min.js">ProtoBuf.noparse.min.js</a> instead, which
-do NOT include the <code>ProtoBuf.DotProto</code> package for parsing and are therefore even smaller.</p>
-
-<h2>Encoder / Decoder</h2>
-
-<p>Built into all message classes. Just call <code>YourMessage#encode([buffer])</code> respectively <code>YourMessage.decode(buffer)</code>.</p>
-
-<h4>Encoding a message</h4>
-
-<div class="highlight"><pre><span class="p">...</span>
-<span class="kd">var</span> <span class="nx">YourMessage</span> <span class="o">=</span> <span class="nx">builder</span><span class="p">.</span><span class="nx">build</span><span class="p">(</span><span class="s2">"YourMessage"</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">myMessage</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">YourMessage</span><span class="p">(...);</span>
-<span class="kd">var</span> <span class="nx">byteBuffer</span> <span class="o">=</span> <span class="nx">myMessage</span><span class="p">.</span><span class="nx">encode</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">buffer</span> <span class="o">=</span> <span class="nx">byteBuffer</span><span class="p">.</span><span class="nx">toArrayBuffer</span><span class="p">();</span>
-
-<span class="c1">// OR: Short...</span>
-<span class="kd">var</span> <span class="nx">buffer</span> <span class="o">=</span> <span class="nx">myMessage</span><span class="p">.</span><span class="nx">toArrayBuffer</span><span class="p">();</span>
-
-<span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="p">...;</span> <span class="c1">// E.g. a WebSocket</span>
-<span class="nx">socket</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
-</pre></div>
-
-<h4>Decoding from an ArrayBuffer/ByteBuffer</h4>
-
-<div class="highlight"><pre><span class="p">...</span>
-<span class="kd">var</span> <span class="nx">YourMessage</span> <span class="o">=</span> <span class="nx">builder</span><span class="p">.</span><span class="nx">build</span><span class="p">(</span><span class="s2">"YourMessage"</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">buffer</span> <span class="o">=</span> <span class="p">...;</span> <span class="c1">// E.g. a buffer received on a WebSocket</span>
-<span class="kd">var</span> <span class="nx">myMessage</span> <span class="o">=</span> <span class="nx">YourMessage</span><span class="p">.</span><span class="nx">decode</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
-</pre></div>
-
-<h2>Command line utility</h2>
-
-<p>It's also possible to transform .proto files into their JSON counterparts or to transform entire namespaces into
-ready-to-use message classes and enum objects by using the <code>proto2js</code> command line utility.</p>
-
-<pre><code>  Usage: proto2js protoFile [-class[=My.Package]|-commonjs[=My.Package]|-amd[=My.Package]] [-min] [&gt; outFile]
-
-  Options:
-
-    -class[=My.Package]     Creates the classes instead of just a JSON definition.
-                            If you do not specify a package, the package
-                            declaration from the .proto file is used instead.
-
-    -commonjs[=My.Package]  Creates a CommonJS export instead of just a JSON def.
-                            If you do not specify a package, the package
-                            declaration from the .proto file is used instead.
-
-    -amd[=My.Package]       Creates an AMD define instead of just a JSON def.
-                            If you do not specify a package, the package
-                            declaration from the .proto file is used instead.
-
-    -min                    Minifies the output.
-</code></pre>
-
-<p>So, to create a JSON definition from the <a href="https://github.com/dcodeIO/ProtoBuf.js/blob/master/tests/complex.proto">tests/complex.proto</a>
-file, run:</p>
-
-<div class="highlight"><pre>proto2js tests/complex.proto &gt; tests/complex.json
-</pre></div>
-
-<p>Or to create classes/a CommonJS export/an AMD define for the entire <code>Game</code> namespace, run:</p>
-
-<div class="highlight"><pre>proto2js tests/complex.proto -class<span class="o">=</span>Game &gt; tests/complex.js
-</pre></div>
-
-<div class="highlight"><pre>proto2js tests/complex.proto -commonjs<span class="o">=</span>Game &gt; tests/complex.js
-<span class="c"># ^ The resulting code will implicitly call require("protobufjs");</span>
-</pre></div>
-
-<div class="highlight"><pre>proto2js tests/complex.proto -amd<span class="o">=</span>Game.Cars &gt; tests/complex.js
-<span class="c"># ^ The resulting code will implicitly use ["ProtoBuf"] as its</span>
-<span class="c">#   declared dependencies and "Game/Cars" as the module name</span>
-</pre></div>
-
-<h2>Parser</h2>
-
-<p>Only available in the full build (i.e. not in "noparse" builds). Compliant with the protobuf parser to the following extend:</p>
+<li>proto2js command line utility</li>
+</ul><h2>
+<a name="documentation" class="anchor" href="#documentation"><span class="octicon octicon-link"></span></a>Documentation</h2>
 
 <ul>
-<li>
-<p>Required, optional, repeated and packed repeated fields:</p>
-
-<div class="highlight"><pre><span class="kd">message</span> <span class="nc">Test</span> <span class="p">{</span>
-  <span class="k">required</span> <span class="kt">int32</span> <span class="na">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">b</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span><span class="o">=</span><span class="mi">100</span><span class="p">];</span>
-  <span class="k">repeated</span> <span class="kt">int32</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-  <span class="k">repeated</span> <span class="kt">int32</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">4</span> <span class="p">[</span><span class="k">packed</span><span class="o">=</span><span class="kc">true</span><span class="p">];</span>
-<span class="p">}</span>
-</pre></div>
-</li>
-<li>
-<p>Data types: int32, uint32, sint32, fixed32, sfixed32, int64, uint64, sint64, fixed64, sfixed64, bool, enum, string,
-bytes, messages, embedded messages, float, double</p>
-
-<div class="highlight"><pre><span class="kd">message</span> <span class="nc">Test</span> <span class="p">{</span>
-  <span class="k">required</span> <span class="kt">int32</span> <span class="na">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// Varint encoded</span>
-  <span class="k">required</span> <span class="kt">uint32</span> <span class="na">b</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// Varint encoded</span>
-  <span class="k">required</span> <span class="kt">sint32</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="c1">// Varint zigzag encoded</span>
-  <span class="k">required</span> <span class="kt">bool</span> <span class="na">d</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span> <span class="c1">// Varint encoded</span>
-
-  <span class="kd">enum</span> <span class="n">Priority</span> <span class="p">{</span>
-      <span class="na">LOW</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-      <span class="na">MEDIUM</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-      <span class="na">HIGH</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-  <span class="p">}</span>
-
-  <span class="k">optional</span> <span class="n">Priority</span> <span class="na">e</span> <span class="o">=</span> <span class="mi">5</span> <span class="p">[</span><span class="k">default</span><span class="o">=</span><span class="n">MEDIUM</span><span class="p">];</span> <span class="c1">// Varint encoded</span>
-  <span class="k">required</span> <span class="kt">string</span> <span class="na">f</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span> <span class="c1">// Varint length delimited</span>
-  <span class="k">required</span> <span class="kt">bytes</span> <span class="na">g</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span> <span class="c1">// Varint length delimited</span>
-  <span class="k">required</span> <span class="n">Embedded</span> <span class="na">h</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">// Varint length delimited</span>
-
-  <span class="kd">message</span> <span class="nc">Embedded</span> <span class="p">{</span>
-      <span class="k">repeated</span> <span class="kt">int32</span> <span class="na">a</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// Multiple tags</span>
-      <span class="k">repeated</span> <span class="kt">int32</span> <span class="na">b</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">packed</span><span class="o">=</span><span class="kc">true</span><span class="p">];</span> <span class="c1">// One tag, length delimited</span>
-
-      <span class="k">required</span> <span class="kt">sfixed32</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span> <span class="c1">// Fixed 4 bytes int32</span>
-      <span class="k">required</span> <span class="kt">fixed32</span> <span class="na">d</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span> <span class="c1">// Fixed 4 bytes uint32</span>
-      <span class="k">required</span> <span class="kt">float</span> <span class="na">e</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span> <span class="c1">// Fixed 4 bytes</span>
-      <span class="k">required</span> <span class="kt">double</span> <span class="na">f</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span> <span class="c1">// Fixed 8 bytes</span>
-
-      <span class="c1">// Through ByteBuffer.js loaded with Long.js:</span>
-      <span class="k">optional</span> <span class="kt">int64</span> <span class="na">g</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span> <span class="c1">// Varint encoded</span>
-      <span class="k">optional</span> <span class="kt">uint64</span> <span class="na">h</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span> <span class="c1">// Varint encoded</span>
-      <span class="k">optional</span> <span class="kt">sint64</span> <span class="na">i</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span> <span class="c1">// Varint zigzag encoded</span>
-      <span class="k">required</span> <span class="kt">sfixed64</span> <span class="na">j</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">// Fixed 8 bytes int64</span>
-      <span class="k">required</span> <span class="kt">fixed64</span> <span class="na">k</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span> <span class="c1">// Fixed 8 bytes uint64</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</li>
-<li>
-<p>Packages</p>
-
-<div class="highlight"><pre><span class="kn">package</span> <span class="nn">My</span><span class="o">.</span><span class="n">Game</span><span class="p">;</span>
-
-<span class="kd">message</span> <span class="nc">Test</span> <span class="p">{</span>
-  <span class="o">...</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Test2</span> <span class="p">{</span>
-  <span class="k">required</span> <span class="n">My.Game.Test</span> <span class="na">test</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</li>
-<li>
-<p>Qualified and fully qualified name resolving:</p>
-
-<div class="highlight"><pre><span class="kn">package</span> <span class="nn">My</span><span class="o">.</span><span class="n">Game</span><span class="p">;</span>
-
-<span class="kd">message</span> <span class="nc">Test</span> <span class="p">{</span>
-  <span class="o">...</span>
-
-  <span class="kd">enum</span> <span class="n">Priority</span> <span class="p">{</span>
-      <span class="na">LOW</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-      <span class="na">MEDIUM</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-      <span class="na">HIGH</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Test2</span> <span class="p">{</span>
-  <span class="k">required</span> <span class="o">.</span><span class="n">My.Game.Test.Priority</span> <span class="na">priority_fqn</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span><span class="o">=</span><span class="n">LOW</span><span class="p">];</span>
-  <span class="k">required</span> <span class="n">Test.Priority</span> <span class="na">priority_qn</span> <span class="o">=</span> <span class="mi">2</span> <span class="p">[</span><span class="k">default</span><span class="o">=</span><span class="n">MEDIUM</span><span class="p">];</span>
-<span class="p">}</span>
-</pre></div>
-</li>
-<li>
-<p>Options on all levels:</p>
-
-<div class="highlight"><pre><span class="k">option</span> <span class="na">toplevel_1</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-<span class="k">option</span> <span class="na">toplevel_2</span> <span class="o">=</span> <span class="s">"Hello!"</span><span class="p">;</span>
-
-<span class="kd">message</span> <span class="nc">Test</span> <span class="p">{</span>
-  <span class="k">option</span> <span class="na">inmessage</span> <span class="o">=</span> <span class="s">"World!"</span><span class="p">;</span>
-  <span class="k">optional</span> <span class="kt">int32</span> <span class="na">somenumber</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">[</span><span class="k">default</span><span class="o">=</span><span class="mi">123</span><span class="p">];</span> <span class="c1">// Actually the only one used</span>
-<span class="p">}</span>
-</pre></div>
-</li>
-<li>
-<p>Imports:</p>
-
-<div class="highlight"><pre><span class="kn">package</span> <span class="nn">My</span><span class="p">;</span> <span class="c1">// Not used by the following imports</span>
-<span class="k">import</span> <span class="n">public</span> <span class="s">"example1.proto"; // The "public"</span> <span class="n">keyword</span> <span class="n">is</span> <span class="n">ignored</span>
-<span class="k">import</span> <span class="s">"example2.proto"</span><span class="p">;</span>
-
-<span class="kd">message</span> <span class="nc">Test2</span> <span class="p">{</span>
-  <span class="k">required</span> <span class="n">Test1</span> <span class="na">test1</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// Unique name</span>
-  <span class="k">required</span> <span class="o">.</span><span class="n">Test2</span> <span class="na">test2</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// Duplicate name resolved absolutely</span>
-<span class="p">}</span>
-</pre></div>
-
-<p>See also: <a href="https://github.com/dcodeIO/ProtoBuf.js/tree/master/tests/example1.proto">example1.proto</a>,
-<a href="https://github.com/dcodeIO/ProtoBuf.js/tree/master/tests/example2.proto">example2.proto</a></p>
-
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">builder</span> <span class="o">=</span> <span class="nx">ProtoBuf</span><span class="p">.</span><span class="nx">protoFromFile</span><span class="p">(</span><span class="s2">"tests/imports.proto"</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">builder</span><span class="p">.</span><span class="nx">build</span><span class="p">();</span>
-<span class="c1">// root now contains:</span>
-<span class="c1">// - .Test1</span>
-<span class="c1">// - .Test2</span>
-<span class="c1">// - .My.Test2 using .Test1 for field 'test1' and .Test2 for field 'test2'</span>
-</pre></div>
-
-<p><strong>NOTE:</strong> Importing .proto files is available in the full build (not in the noparse build) only. Importing the .json
-counterpart of a .proto file (e.g. generated by proto2js) is supported regardless of the build you are using. Imports
-are also always fetched <em>synchronously</em>, so it's a good idea to package everything into a single file when using it in
-the browser.</p>
-</li>
-</ul><h4>Not (yet) supported</h4>
-
-<ul>
-<li>
-<em>Extensions</em> (what for?) and <em>services</em> (you roll your own, don't you?). If you need anything of this, please open an
-issue and explain your exact requirements. It's just that I have no idea how to benefit from that and therefore I am
-not sure how to design it.</li>
-</ul><h4>Calling the parser on your own</h4>
-
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">ProtoBuf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"protobufjs"</span><span class="p">),</span>
-    <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"fs"</span><span class="p">),</span>
-    <span class="nx">util</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"util"</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">parser</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ProtoBuf</span><span class="p">.</span><span class="nx">DotProto</span><span class="p">.</span><span class="nx">Parser</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="s2">"tests/complex.proto"</span><span class="p">));</span>
-<span class="kd">var</span> <span class="nx">ast</span> <span class="o">=</span> <span class="nx">parser</span><span class="p">.</span><span class="nx">parse</span><span class="p">();</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">util</span><span class="p">.</span><span class="nx">inspect</span><span class="p">(</span><span class="nx">ast</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">));</span>
-</pre></div>
-
-<h2>CommonJS, AMD and browser (shim)</h2>
-
-<h4>node.js / CommonJS</h4>
-
-<div class="highlight"><pre>npm install protobufjs
-</pre></div>
-
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">ProtoBuf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s2">"protobufjs"</span><span class="p">);</span>
-<span class="p">...</span>
-</pre></div>
-
-<h4>RequireJS / AMD</h4>
-
-<p>Requires <a href="http://github.com/dcodeIO/ByteBuffer.js">ByteBuffer.js</a>. Optionally depends on <a href="https://github.com/dcodeIO/Long.js">Long.js</a>
-for long (int64) support. If you do not require long support, you can skip the Long.js config. <a href="http://requirejs.org/">Require.js</a>
-example:</p>
-
-<div class="highlight"><pre><span class="nx">require</span><span class="p">.</span><span class="nx">config</span><span class="p">({</span>
-    <span class="p">...</span>
-    <span class="s2">"paths"</span><span class="o">:</span> <span class="p">{</span>
-        <span class="s2">"Long"</span><span class="o">:</span> <span class="s2">"/path/to/Long.js"</span><span class="p">,</span>
-        <span class="s2">"ByteBuffer"</span><span class="o">:</span> <span class="s2">"/path/to/ByteBuffer.js"</span><span class="p">,</span>
-        <span class="s2">"ProtoBuf"</span><span class="o">:</span> <span class="s2">"/path/to/ProtoBuf.js"</span>
-    <span class="p">},</span>
-    <span class="p">...</span>
-<span class="p">});</span>
-<span class="nx">require</span><span class="p">([</span><span class="s2">"ProtoBuf"</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">ProtoBuf</span><span class="p">)</span> <span class="p">{</span>
-    <span class="p">...</span>
-<span class="p">});</span>
-</pre></div>
-
-<p>Or as a module dependency:</p>
-
-<div class="highlight"><pre><span class="nx">define</span><span class="p">(</span><span class="s2">"MyModule"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"ProtoBuf"</span><span class="p">],</span> <span class="kd">function</span><span class="p">(</span><span class="nx">ProtoBuf</span><span class="p">)</span> <span class="p">{</span>
-    <span class="p">...</span>
-<span class="p">});</span>
-</pre></div>
-
-<h4>Browser (shim)</h4>
-
-<p>Requires <a href="http://github.com/dcodeIO/ByteBuffer.js">ByteBuffer.js</a>. Optionally depends on <a href="https://github.com/dcodeIO/Long.js">Long.js</a>
-for long (int64) support. If you do not require long support, you can skip the Long.js include.</p>
-
-<div class="highlight"><pre><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"//raw.github.com/dcodeIO/Long.js/master/Long.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"//raw.github.com/dcodeIO/ByteBuffer.js/master/ByteBuffer.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"//raw.github.com/dcodeIO/ProtoBuf.js/master/ProtoBuf.min.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
-</pre></div>
-
-<div class="highlight"><pre><span class="kd">var</span> <span class="nx">ProtoBuf</span> <span class="o">=</span> <span class="nx">dcodeIO</span><span class="p">.</span><span class="nx">ProtoBuf</span><span class="p">;</span>
-<span class="p">...</span>
-</pre></div>
-
-<h2>On long (int64) support</h2>
-
-<p>Full 64bit support is available since 0.10.0 and requires ByteBuffer.js &gt;=1.2.3 with Long.js &gt;=1.1.2.</p>
-
-<ul>
-<li><a href="https://github.com/dcodeIO/ByteBuffer.js#on-long-int64-support">See also</a></li>
-</ul><h2>On endianess before 0.11</h2>
-
-<p>Till 0.10, ProtoBuf.js mistakenly used big endian byte order when en-/decoding non-varint values as <a href="https://github.com/dcodeIO/ProtoBuf.js/pull/5">reported by
-bertdouglas</a>. This has been corrected in 0.11.0. However, versions before
-0.11 are now to consider <strong>incompatible</strong> with later versions when using non-varint values, so please upgrade to the
-latest version to ensure compatibility with the official protobuf specification.</p>
-
-<h2>Downloads</h2>
-
-<ul>
-<li><a href="https://github.com/dcodeIO/ProtoBuf.js/archive/master.zip">ZIP-Archive</a></li>
-<li><a href="https://github.com/dcodeIO/ProtoBuf.js/tarball/master">Tarball</a></li>
-</ul><h2>Documentation</h2>
-
-<ul>
-<li><a href="http://htmlpreview.github.com/?http://github.com/dcodeIO/ProtoBuf.js/master/docs/ProtoBuf.html">View documentation</a></li>
-</ul><h2>Tests (&amp; Examples) <a href="https://travis-ci.org/dcodeIO/ProtoBuf.js"><img src="https://travis-ci.org/dcodeIO/ProtoBuf.js.png?branch=master" alt="Build Status"></a>
+<li><a href="https://developers.google.com/protocol-buffers/docs/overview">Read the official protobuf guide</a></li>
+<li><a href="https://github.com/dcodeIO/ProtoBuf.js/wiki">Read our wiki</a></li>
+<li><a href="http://htmlpreview.github.com/?http://github.com/dcodeIO/ProtoBuf.js/master/docs/ProtoBuf.html">Read the API docs</a></li>
+<li><a href="https://github.com/dcodeIO/ProtoBuf.js/tree/master/examples">Check out the examples</a></li>
+</ul><h2>
+<a name="tests-" class="anchor" href="#tests-"><span class="octicon octicon-link"></span></a>Tests <a href="https://travis-ci.org/dcodeIO/ProtoBuf.js"><img src="https://travis-ci.org/dcodeIO/ProtoBuf.js.png?branch=master" alt="Build Status"></a>
 </h2>
 
 <ul>
 <li><a href="https://github.com/dcodeIO/ProtoBuf.js/blob/master/tests/suite.js">View source</a></li>
-<li><a href="https://travis-ci.org/dcodeIO/ProtoBuf.js">View node report</a></li>
-<li><a href="http://htmlpreview.github.com/?http://github.com/dcodeIO/ProtoBuf.js/master/tests/suite.html">View browser report</a></li>
-</ul><h2>License</h2>
+<li><a href="https://travis-ci.org/dcodeIO/ProtoBuf.js">View report</a></li>
+</ul><h2>
+<a name="downloads" class="anchor" href="#downloads"><span class="octicon octicon-link"></span></a>Downloads</h2>
 
-<p>Apache License, Version 2.0 - <a href="http://www.apache.org/licenses/LICENSE-2.0.html">http://www.apache.org/licenses/LICENSE-2.0.html</a></p>
+<ul>
+<li><a href="https://github.com/dcodeIO/ProtoBuf.js/archive/master.zip">ZIP-Archive</a></li>
+<li><a href="https://github.com/dcodeIO/ProtoBuf.js/tarball/master">Tarball</a></li>
+</ul><h2>
+<a name="contributors" class="anchor" href="#contributors"><span class="octicon octicon-link"></span></a>Contributors</h2>
+
+<p><a href="https://github.com/dcodeIO">Daniel Wirtz</a> (maintainer), <a href="https://github.com/yyfrankyy">Frank Xu</a>, <a href="https://github.com/Dretch">Dretch</a>, <a href="https://github.com/shirmin">shirmin</a></p>
+
+<p><strong>License:</strong> <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License, Version 2.0</a> - Logo derived from <a href="http://www.w3.org/html/logo/">W3C HTML5 Logos</a> (CC A 3.0)</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/dcodeIO">dcodeIO</a></p>
