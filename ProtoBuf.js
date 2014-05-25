@@ -355,6 +355,7 @@
                 OPTNAME: /^(?:[a-zA-Z][a-zA-Z_0-9]*|\([a-zA-Z][a-zA-Z_0-9]*\))$/,
                 TYPEDEF: /^[a-zA-Z][a-zA-Z_0-9]*$/,
                 TYPEREF: /^(?:\.?[a-zA-Z][a-zA-Z_0-9]*)+$/,
+                GROUP: /^group$/,
                 FQTYPEREF: /^(?:\.[a-zA-Z][a-zA-Z_0-9]*)+$/,
                 NUMBER: /^-?(?:[1-9][0-9]*|0|0x[0-9a-fA-F]+|0[0-7]+|[0-9]*\.[0-9]+)$/,
                 NUMBER_DEC: /^(?:[1-9][0-9]*|0)$/,
@@ -971,9 +972,24 @@
                     throw(new Error("Illegal message name"+(parent ? " in message "+parent["name"] : "")+" at line "+this.tn.line+": "+token));
                 }
                 msg["name"] = token;
-                token = this.tn.next();
+        
+                this._parseMessageContent(msg);
+        
+                parent["messages"].push(msg);
+                return msg;
+            };
+        
+            /**
+             * Parses inner contents of a message or group.
+             * @param {Object} msg Message definition, will be updated
+             * @return {void}
+             * @throws {Error} If the message cannot be parsed
+             * @private
+             */
+            Parser.prototype._parseMessageContent = function (msg) {
+                var token = this.tn.next();
                 if (token != Lang.OPEN) {
-                    throw(new Error("Illegal OPEN after message "+msg.name+" at line "+this.tn.line+": "+token+" ('"+Lang.OPEN+"' expected)"));
+                    throw(new Error("Illegal OPEN after message " + msg.name + " at line " + this.tn.line + ": " + token + " ('" + Lang.OPEN + "' expected)"));
                 }
                 msg["fields"] = []; // Note: Using arrays to support also browser that cannot preserve order of object keys.
                 msg["enums"] = [];
@@ -987,7 +1003,12 @@
                         if (token === Lang.END) this.tn.next();
                         break;
                     } else if (Lang.RULE.test(token)) {
-                        this._parseMessageField(msg, token);
+                        var nextToken = this.tn.peek();
+                        if (Lang.GROUP.test(nextToken)) {
+                            this._parseGroup(msg, token);
+                        } else {
+                            this._parseMessageField(msg, token);
+                        }
                     } else if (token === "enum") {
                         this._parseEnum(msg, token);
                     } else if (token === "message") {
@@ -999,11 +1020,53 @@
                     } else if (token === "extend") {
                         this._parseExtend(msg, token);
                     } else {
-                        throw(new Error("Illegal token in message "+msg.name+" at line "+this.tn.line+": "+token+" (type or '"+Lang.CLOSE+"' expected)"));
+                        throw(new Error("Illegal token in message " + msg.name + " at line " + this.tn.line + ": " + token + " (type or '" + Lang.CLOSE + "' expected)"));
                     }
                 } while (true);
-                parent["messages"].push(msg);
-                return msg;
+            };
+        
+            /**
+             * Parses a group definition.
+             * @param {Object} parent Parent definition
+             * @param {string} token First token
+             * @return {Object}
+             * @throws {Error} If the message cannot be parsed
+             * @private
+             */
+            Parser.prototype._parseGroup = function(parent, token) {
+                /** @dict */
+                var group = {}; // Note: At some point we might want to exclude the parser, so we need a dict.
+                group["rule"] = token;
+        
+                this.tn.next(); // eat "group" token
+        
+                token = this.tn.next();
+                if (!Lang.NAME.test(token)) {
+                    throw(new Error("Illegal group name"+(parent ? " in message "+parent["name"] : "")+" at line "+this.tn.line+": "+token));
+                }
+                group["type"] = token;
+                group["name"] = "group_" + token; // hack, to avoid duplicate fields in Reflection
+        
+                token = this.tn.next();
+                if (token !== Lang.EQUAL) {
+                    throw(new Error("Illegal field number operator for group "+parent.name+"#"+group.name+" at line "+this.tn.line+": "+token+" ('"+Lang.EQUAL+"' expected)"));
+                }
+        
+                token = this.tn.next();
+                try {
+                    group["id"] = this._parseId(token);
+                } catch (e) {
+                    throw(new Error("Illegal field id in group "+parent.name+"#"+group.name+" at line "+this.tn.line+": "+token));
+                }
+        
+                group["options"] = {};
+        
+                this._parseMessageContent(group);
+        
+                parent["messages"].push(group);
+                parent["fields"].push(group);
+        
+                return group;
             };
         
             /**
@@ -3764,6 +3827,239 @@
         ProtoBuf.protoFromFile = ProtoBuf.loadProtoFile; // Legacy
 
 
+        /**
+         * Utilities to parse ProtoBufs serialized to text format
+         * @namespace
+         * @expose
+         */
+        ProtoBuf.TextFormat = {};
+        
+        /**
+         * @alias ProtoBuf.TextFormat.Lang
+         * @expose
+         */
+        ProtoBuf.TextFormat.Lang = (function() {
+            "use strict";
+        
+            /**
+             * ProtoBuf TextFormated Language.
+             * @exports ProtoBuf.TextFormat.Lang
+             * @type {Object.<string,string|RegExp>}
+             * @namespace
+             * @expose
+             */
+             var Lang = {
+                WHITESPACE: /\s/,
+        
+                STRING: /(("(\\"|[^"])*")|('(\\'|[^'])*'))/g,
+                STRINGOPEN: '"',
+                STRINGCLOSE: '"',
+                STRINGOPEN_SQ: "'",
+                STRINGCLOSE_SQ: "'",
+        
+                DELIM: /[\s\{\}<>:#"']/g,
+        
+                NAME: /^[a-zA-Z_][a-zA-Z_0-9]*$/,
+             };
+             return Lang;
+        })();
+                
+        /**
+         * @alias ProtoBuf.TextFormat.Tokenizer
+         * @expose
+         */
+        ProtoBuf.TextFormat.Tokenizer = (function(Lang) {
+            "use strict";
+            
+            var Tokenizer = function(proto) {
+                this.source = ""+proto;
+                this.index = 0;
+                this.line = 1;
+                this.tokenBuffer = [];
+                this.readingString = false;
+                this.stringEndsWith = "";
+            };
+        
+            Tokenizer.prototype.next = function() {
+                if (this.tokenBuffer.length > 0) {
+                    return this.tokenBuffer.shift();
+                }
+                if (this.index >= this.source.length) {
+                    return null; // No more tokens
+                }
+                if (this.readingString) {
+                    this.readingString = false;
+                    return this._readString();
+                }
+        
+                // Strip white spaces
+                var last, token, end;
+                while (Lang.WHITESPACE.test(last = this.source.charAt(this.index))) {
+                    this.index++;
+                    if (last === "\n") this.line++;
+                    if (this.index === this.source.length) return null;
+                }
+        
+                // Read comment
+                if (this.source.charAt(this.index) === '#') {
+                    end = this.index;
+                    while (this.source.charAt(end) !== "\n") {
+                        end++;
+                        if (end === this.source.length) break;
+                    }
+                    token = this.source.substring(this.index, this.index = end);
+                    return token;
+                }
+        
+                // Read the next token
+                end = this.index;
+                Lang.DELIM.lastIndex = 0;
+                var delim = Lang.DELIM.test(this.source.charAt(end));
+                if (!delim) {
+                    end++;
+                    while(end < this.source.length && !Lang.DELIM.test(this.source.charAt(end))) {
+                        end++;
+                    }
+                } else {
+                    end++;
+                }
+                token = this.source.substring(this.index, this.index = end);
+                if (token === Lang.STRINGOPEN) {
+                    this.readingString = true;
+                    this.stringEndsWith = Lang.STRINGCLOSE;
+                } else if (token === Lang.STRINGOPEN_SQ) {
+                    this.readingString = true;
+                    this.stringEndsWith = Lang.STRINGCLOSE_SQ;
+                }
+                return token;
+            };
+        
+            /**
+             * Reads a string beginning at the current index.
+             * @return {string} The string
+             * @throws {Error} If it's not a valid string
+             * @private
+             */
+            Tokenizer.prototype._readString = function() {
+                Lang.STRING.lastIndex = this.index-1; // Include the open quote
+                var match;
+                if ((match = Lang.STRING.exec(this.source)) !== null) {
+                    var s = match[1];
+                    this.index = Lang.STRING.lastIndex;
+                    this.tokenBuffer.push(this.stringEndsWith);
+                    return s;
+                }
+                throw(new Error("Illegal string value at line "+this.line+", index "+this.index));
+            };
+        
+            return Tokenizer;
+        })(ProtoBuf.TextFormat.Lang);
+                
+        /**
+         * @alias ProtoBuf.TextFormat.Parser
+         * @expose
+         */
+        ProtoBuf.TextFormat.Parser = (function(Lang, Tokenizer, Util) {
+            "use strict";
+        
+            var Parser = function() {
+        
+            };
+        
+            var tokenizer;
+            var lookaheadToken; // lookahead
+        
+            function lookahead() {
+                if (lookaheadToken) return lookaheadToken;
+                else return lookaheadToken = tokenizer.next();
+            }
+        
+            function next() {
+                if (lookaheadToken) {
+                    var tmp = lookaheadToken;
+                    lookaheadToken = null;
+                    return tmp;
+                } else {
+                    return tokenizer.next();
+                }
+            }
+        
+            function unexpected(token ,msg) {
+                throw new Error("Unexpected token '" + token + "' at line " + tokenizer.line + (msg ? "; " + msg : ""));
+            }
+        
+            Parser.prototype.parse = function(pb) {
+                tokenizer = new Tokenizer(pb);
+        
+                var value = {};
+                var token;
+                do {
+                    token = next();
+                    if (token == null) break; // no more tokens
+        
+                    if (Lang.NAME.test(token)) {
+                        this._parseKeyValPair(value, token);
+        
+                    } else {
+                        unexpected(token)
+        
+                    }
+                } while(true);
+        
+                return value;
+            };
+        
+            Parser.prototype._parseKeyValPair = function (ret, key) {
+                var token = next();
+                var value, comment;
+        
+                if (/^[:=]$/.test(token)) { // simple value
+                    token = next();
+                    if (/^["']$/.test(token)) { // string
+                        value = this._parseStringValue(token)
+                        next(); // eat quote
+                    } else {
+                        value = token; // simple
+                    }
+        
+                    if (/^#.*/.test(lookahead())) comment = next().substr(1).trim();
+        
+                } else if (/^[\{<]$/.test(token)) { // compound value
+                    value = {};
+                    while (!/^[\}>]/.test(token = next())) {
+                        this._parseKeyValPair(value, token);
+                    }
+        
+                    //next(); // eat close
+        
+                } else {
+                    unexpected(token);
+                }
+        
+                // store to output
+                if (ret[key]) {
+                    if (!Util.isArray(ret[key])) {
+                        ret[key] = [ ret[key] ];
+                    }
+                    ret[key].push(value);
+                } else {
+                    ret[key] = value;
+                }
+            };
+        
+            Parser.prototype._parseStringValue = function (quoteType) {
+                var value = next();
+                return value.substring(1, value.length - 1).replace(/\\(['"])/, '$1');
+            };
+        
+            Parser.prototype._parseScalarValue = function (token) {
+                if (/^\d+$/.test(token)) return token - 0;
+                else return token;
+            };
+        
+            return Parser;
+        })(ProtoBuf.TextFormat.Lang, ProtoBuf.TextFormat.Tokenizer, ProtoBuf.Util);
+                
         /**
          * Constructs a new Builder with the specified package defined.
          * @param {string=} pkg Package name as fully qualified name, e.g. "My.Game". If no package is specified, the
