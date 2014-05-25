@@ -26,9 +26,11 @@ ProtoBuf.DotProto.Tokenizer = (function(Lang) {
      * @exports ProtoBuf.DotProto.Tokenizer
      * @class A ProtoBuf .proto Tokenizer.
      * @param {string} proto Proto to tokenize
+     * @param {dict} options
      * @constructor
      */
-    var Tokenizer = function(proto) {
+    var Tokenizer = function(proto, options) {
+        options = options || {};
         
         /**
          * Source to parse.
@@ -71,6 +73,11 @@ ProtoBuf.DotProto.Tokenizer = (function(Lang) {
          * @expose
          */
         this.stringEndsWith = Lang.STRINGCLOSE;
+
+        this.readWhiteSpace = !!options.readWhiteSpace;
+        this.readComments = !!options.readComments;
+        this.commentBuffer = [];
+        this.lastComment = null;
     };
 
     /**
@@ -101,6 +108,34 @@ ProtoBuf.DotProto.Tokenizer = (function(Lang) {
         if (this.stack.length > 0) {
             return this.stack.shift();
         }
+
+        var token, keep;
+        do {
+            token = this._next();
+            if (token === null) return null; // no more tokens
+
+            if (/^\/[\/\*]/.test(token)) {
+                this.commentBuffer.push(token);
+                keep = this.readComments;
+            } else if (/^\s+/.test(token)) {
+                keep = this.readWhiteSpace;
+            } else {
+                this.lastComment = this.commentBuffer.length > 0 ? this.commentBuffer.join("").trim() : null;
+                this.commentBuffer = [];
+                keep = true;
+            }
+
+        } while (!keep);
+
+        return token;
+    };
+
+    /**
+     * Gets the next token and advances by one.
+     * @return {?string} Token or `null` on EOF
+     * @throws {Error} If it's not a valid proto file
+     */
+    Tokenizer.prototype._next = function() {
         if (this.index >= this.source.length) {
             return null; // No more tokens
         }
@@ -108,43 +143,43 @@ ProtoBuf.DotProto.Tokenizer = (function(Lang) {
             this.readingString = false;
             return this._readString();
         }
-        var repeat, last;
-        do {
-            repeat = false;
-            // Strip white spaces
-            while (Lang.WHITESPACE.test(last = this.source.charAt(this.index))) {
-                this.index++;
-                if (last === "\n") this.line++;
-                if (this.index === this.source.length) return null;
-            }
-            // Strip comments
-            if (this.source.charAt(this.index) === '/') {
-                if (this.source.charAt(++this.index) === '/') { // Single line
-                    while (this.source.charAt(this.index) !== "\n") {
-                        this.index++;
-                        if (this.index == this.source.length) return null;
-                    }
-                    this.index++;
-                    this.line++;
-                    repeat = true;
-                } else if (this.source.charAt(this.index) === '*') { /* Block */
-                    last = '';
-                    while (last+(last=this.source.charAt(this.index)) !== '*/') {
-                        this.index++;
-                        if (last === "\n") this.line++;
-                        if (this.index === this.source.length) return null;
-                    }
-                    this.index++;
-                    repeat = true;
-                } else {
-                    throw(new Error("Invalid comment at line "+this.line+": /"+this.source.charAt(this.index)+" ('/' or '*' expected)"));
-                }
-            }
-        } while (repeat);
-        if (this.index === this.source.length) return null;
-
-        // Read the next token
         var end = this.index;
+        var last;
+
+        // White spaces
+        while (Lang.WHITESPACE.test(last = this.source.charAt(end))) {
+            end++;
+            if (last === "\n") this.line++;
+            if (end === this.source.length) break;
+        }
+        if (end > this.index) {
+            return this.source.substring(this.index, this.index = end);
+        }
+
+        // Comments
+        if (this.source.charAt(end) === '/') {
+            if (this.source.charAt(++end) === '/') { // Single line
+                while (this.source.charAt(end) !== "\n") {
+                    end++;
+                    if (end == this.source.length) break;
+                }
+                end++;
+                this.line++;
+            } else if (this.source.charAt(end) === '*') { /* Block */
+                last = '';
+                while (last+(last=this.source.charAt(end)) !== '*/') {
+                    end++;
+                    if (last === "\n") this.line++;
+                    if (end === this.source.length) return null;
+                }
+                end++;
+            } else {
+                throw(new Error("Invalid comment at line "+this.line+": /"+this.source.charAt(this.index)+" ('/' or '*' expected)"));
+            }
+            return this.source.substring(this.index, this.index = end);
+        }
+
+        // Next token
         Lang.DELIM.lastIndex = 0;
         var delim = Lang.DELIM.test(this.source.charAt(end));
         if (!delim) {
@@ -189,7 +224,7 @@ ProtoBuf.DotProto.Tokenizer = (function(Lang) {
     Tokenizer.prototype.toString = function() {
         return "Tokenizer("+this.index+"/"+this.source.length+" at line "+this.line+")";
     };
-    
+
     return Tokenizer;
     
 })(ProtoBuf.Lang);

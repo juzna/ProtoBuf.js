@@ -422,6 +422,7 @@ ProtoBuf.DotProto.Parser = (function(ProtoBuf, Lang, Tokenizer) {
     Parser.prototype._parseMessage = function(parent, token) {
         /** @dict */
         var msg = {}; // Note: At some point we might want to exclude the parser, so we need a dict.
+        msg["comment"] = this.tn.lastComment;
         token = this.tn.next();
         if (!Lang.NAME.test(token)) {
             throw(new Error("Illegal message name"+(parent ? " in message "+parent["name"] : "")+" at line "+this.tn.line+": "+token));
@@ -458,11 +459,13 @@ ProtoBuf.DotProto.Parser = (function(ProtoBuf, Lang, Tokenizer) {
                 if (token === Lang.END) this.tn.next();
                 break;
             } else if (Lang.RULE.test(token)) {
+                var comment = this.tn.lastComment;
                 var nextToken = this.tn.peek();
                 if (Lang.GROUP.test(nextToken)) {
-                    this._parseGroup(msg, token);
+                    this._parseGroup(msg, token, comment);
                 } else {
-                    this._parseMessageField(msg, token);
+                    var field = this._parseMessageField(msg, token);
+                    field["comment"] = comment;
                 }
             } else if (token === "enum") {
                 this._parseEnum(msg, token);
@@ -484,14 +487,16 @@ ProtoBuf.DotProto.Parser = (function(ProtoBuf, Lang, Tokenizer) {
      * Parses a group definition.
      * @param {Object} parent Parent definition
      * @param {string} token First token
+     * @param {string} comment
      * @return {Object}
      * @throws {Error} If the message cannot be parsed
      * @private
      */
-    Parser.prototype._parseGroup = function(parent, token) {
+    Parser.prototype._parseGroup = function(parent, token, comment) {
         /** @dict */
-        var group = {}; // Note: At some point we might want to exclude the parser, so we need a dict.
-        group["rule"] = token;
+        var field = {}, msg = {}; // Note: At some point we might want to exclude the parser, so we need a dict.
+        field["rule"] = token;
+        field["comment"] = msg["comment"] = comment;
 
         this.tn.next(); // eat "group" token
 
@@ -499,29 +504,29 @@ ProtoBuf.DotProto.Parser = (function(ProtoBuf, Lang, Tokenizer) {
         if (!Lang.NAME.test(token)) {
             throw(new Error("Illegal group name"+(parent ? " in message "+parent["name"] : "")+" at line "+this.tn.line+": "+token));
         }
-        group["type"] = token;
-        group["name"] = "group_" + token; // hack, to avoid duplicate fields in Reflection
+        field["type"] = token;
+        field["name"] = msg["name"] = "group_" + token; // hack, to avoid duplicate fields in Reflection
 
         token = this.tn.next();
         if (token !== Lang.EQUAL) {
-            throw(new Error("Illegal field number operator for group "+parent.name+"#"+group.name+" at line "+this.tn.line+": "+token+" ('"+Lang.EQUAL+"' expected)"));
+            throw(new Error("Illegal field number operator for group "+parent.name+"#"+msg.name+" at line "+this.tn.line+": "+token+" ('"+Lang.EQUAL+"' expected)"));
         }
 
         token = this.tn.next();
         try {
-            group["id"] = this._parseId(token);
+            field["id"] = this._parseId(token);
         } catch (e) {
-            throw(new Error("Illegal field id in group "+parent.name+"#"+group.name+" at line "+this.tn.line+": "+token));
+            throw(new Error("Illegal field id in group "+parent.name+"#"+msg.name+" at line "+this.tn.line+": "+token));
         }
 
-        group["options"] = {};
+        msg["options"] = field["options"] = {};
 
-        this._parseMessageContent(group);
+        this._parseMessageContent(msg);
 
-        parent["messages"].push(group);
-        parent["fields"].push(group);
+        parent["messages"].push(msg);
+        parent["fields"].push(field);
 
-        return group;
+        return msg;
     };
 
     /**
@@ -566,6 +571,8 @@ ProtoBuf.DotProto.Parser = (function(ProtoBuf, Lang, Tokenizer) {
             throw(new Error("Illegal field delimiter in message "+msg.name+"#"+fld.name+" at line "+this.tn.line+": "+token+" ('"+Lang.END+"' expected)"));
         }
         msg["fields"].push(fld);
+
+        return fld;
     };
 
     /**
@@ -656,6 +663,7 @@ ProtoBuf.DotProto.Parser = (function(ProtoBuf, Lang, Tokenizer) {
     Parser.prototype._parseEnum = function(msg, token) {
         /** @dict */
         var enm = {};
+        msg["comment"] = this.tn.lastComment;
         token = this.tn.next();
         if (!Lang.NAME.test(token)) {
             throw(new Error("Illegal enum name in message "+msg.name+" at line "+this.tn.line+": "+token));
