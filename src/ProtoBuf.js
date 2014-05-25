@@ -281,6 +281,8 @@
 
         // #endif
 
+        // #include "ProtoBuf/TextFormat.js"
+
         /**
          * Constructs a new Builder with the specified package defined.
          * @param {string=} pkg Package name as fully qualified name, e.g. "My.Game". If no package is specified, the
