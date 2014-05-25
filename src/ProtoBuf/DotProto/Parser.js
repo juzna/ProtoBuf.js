@@ -427,9 +427,24 @@ ProtoBuf.DotProto.Parser = (function(ProtoBuf, Lang, Tokenizer) {
             throw(new Error("Illegal message name"+(parent ? " in message "+parent["name"] : "")+" at line "+this.tn.line+": "+token));
         }
         msg["name"] = token;
-        token = this.tn.next();
+
+        this._parseMessageContent(msg);
+
+        parent["messages"].push(msg);
+        return msg;
+    };
+
+    /**
+     * Parses inner contents of a message or group.
+     * @param {Object} msg Message definition, will be updated
+     * @return {void}
+     * @throws {Error} If the message cannot be parsed
+     * @private
+     */
+    Parser.prototype._parseMessageContent = function (msg) {
+        var token = this.tn.next();
         if (token != Lang.OPEN) {
-            throw(new Error("Illegal OPEN after message "+msg.name+" at line "+this.tn.line+": "+token+" ('"+Lang.OPEN+"' expected)"));
+            throw(new Error("Illegal OPEN after message " + msg.name + " at line " + this.tn.line + ": " + token + " ('" + Lang.OPEN + "' expected)"));
         }
         msg["fields"] = []; // Note: Using arrays to support also browser that cannot preserve order of object keys.
         msg["enums"] = [];
@@ -443,7 +458,12 @@ ProtoBuf.DotProto.Parser = (function(ProtoBuf, Lang, Tokenizer) {
                 if (token === Lang.END) this.tn.next();
                 break;
             } else if (Lang.RULE.test(token)) {
-                this._parseMessageField(msg, token);
+                var nextToken = this.tn.peek();
+                if (Lang.GROUP.test(nextToken)) {
+                    this._parseGroup(msg, token);
+                } else {
+                    this._parseMessageField(msg, token);
+                }
             } else if (token === "enum") {
                 this._parseEnum(msg, token);
             } else if (token === "message") {
@@ -455,11 +475,53 @@ ProtoBuf.DotProto.Parser = (function(ProtoBuf, Lang, Tokenizer) {
             } else if (token === "extend") {
                 this._parseExtend(msg, token);
             } else {
-                throw(new Error("Illegal token in message "+msg.name+" at line "+this.tn.line+": "+token+" (type or '"+Lang.CLOSE+"' expected)"));
+                throw(new Error("Illegal token in message " + msg.name + " at line " + this.tn.line + ": " + token + " (type or '" + Lang.CLOSE + "' expected)"));
             }
         } while (true);
-        parent["messages"].push(msg);
-        return msg;
+    };
+
+    /**
+     * Parses a group definition.
+     * @param {Object} parent Parent definition
+     * @param {string} token First token
+     * @return {Object}
+     * @throws {Error} If the message cannot be parsed
+     * @private
+     */
+    Parser.prototype._parseGroup = function(parent, token) {
+        /** @dict */
+        var group = {}; // Note: At some point we might want to exclude the parser, so we need a dict.
+        group["rule"] = token;
+
+        this.tn.next(); // eat "group" token
+
+        token = this.tn.next();
+        if (!Lang.NAME.test(token)) {
+            throw(new Error("Illegal group name"+(parent ? " in message "+parent["name"] : "")+" at line "+this.tn.line+": "+token));
+        }
+        group["type"] = token;
+        group["name"] = "group_" + token; // hack, to avoid duplicate fields in Reflection
+
+        token = this.tn.next();
+        if (token !== Lang.EQUAL) {
+            throw(new Error("Illegal field number operator for group "+parent.name+"#"+group.name+" at line "+this.tn.line+": "+token+" ('"+Lang.EQUAL+"' expected)"));
+        }
+
+        token = this.tn.next();
+        try {
+            group["id"] = this._parseId(token);
+        } catch (e) {
+            throw(new Error("Illegal field id in group "+parent.name+"#"+group.name+" at line "+this.tn.line+": "+token));
+        }
+
+        group["options"] = {};
+
+        this._parseMessageContent(group);
+
+        parent["messages"].push(group);
+        parent["fields"].push(group);
+
+        return group;
     };
 
     /**

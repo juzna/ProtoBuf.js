@@ -53,6 +53,7 @@ ProtoBuf.Lang = (function() {
         OPTNAME: /^(?:[a-zA-Z][a-zA-Z_0-9]*|\([a-zA-Z][a-zA-Z_0-9]*\))$/,
         TYPEDEF: /^[a-zA-Z][a-zA-Z_0-9]*$/,
         TYPEREF: /^(?:\.?[a-zA-Z][a-zA-Z_0-9]*)+$/,
+        GROUP: /^group$/,
         FQTYPEREF: /^(?:\.[a-zA-Z][a-zA-Z_0-9]*)+$/,
         NUMBER: /^-?(?:[1-9][0-9]*|0|0x[0-9a-fA-F]+|0[0-7]+|[0-9]*\.[0-9]+)$/,
         NUMBER_DEC: /^(?:[1-9][0-9]*|0)$/,
